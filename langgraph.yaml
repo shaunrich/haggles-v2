@@ -1,0 +1,178 @@
+# LangGraph Platform Configuration for Hagglz Negotiation Agent
+# This file configures the deployment of the Hagglz AI negotiation system
+
+name: hagglz-negotiation-agent
+version: "1.0.0"
+description: "AI-powered bill negotiation system with specialised agents for different bill types"
+
+# Environment configuration
+environment:
+  python_version: "3.11"
+  
+# Dependencies
+dependencies:
+  - langchain>=0.1.0
+  - langgraph>=0.1.0
+  - langchain-openai>=0.1.0
+  - langchain-anthropic>=0.1.0
+  - langchain-community>=0.1.0
+  - fastapi>=0.104.0
+  - uvicorn>=0.24.0
+  - pydantic>=2.0.0
+  - chromadb>=0.4.0
+  - python-multipart>=0.0.6
+  - python-dotenv>=1.0.0
+
+# Graph configuration
+graphs:
+  # Master orchestrator graph
+  - name: "master_orchestrator"
+    path: "./orchestrator.py"
+    class: "MasterOrchestrator"
+    description: "Main orchestrator that routes bills to specialist agents"
+    
+  # Utility negotiation agent
+  - name: "utility_agent"
+    path: "./agents/utility_agent.py"
+    class: "UtilityNegotiationAgent"
+    description: "Specialist agent for utility bill negotiations"
+    
+  # Medical negotiation agent
+  - name: "medical_agent"
+    path: "./agents/medical_agent.py"
+    class: "MedicalNegotiationAgent"
+    description: "Specialist agent for medical bill negotiations"
+    
+  # Subscription negotiation agent
+  - name: "subscription_agent"
+    path: "./agents/subscription_agent.py"
+    class: "SubscriptionNegotiationAgent"
+    description: "Specialist agent for subscription negotiations"
+    
+  # Telecom negotiation agent
+  - name: "telecom_agent"
+    path: "./agents/telecom_agent.py"
+    class: "TelecomNegotiationAgent"
+    description: "Specialist agent for telecom bill negotiations"
+
+# API configuration
+api:
+  path: "./api/main.py"
+  app: "app"
+  port: 8000
+  
+# Environment variables required for deployment
+env_vars:
+  required:
+    - OPENAI_API_KEY
+    - ANTHROPIC_API_KEY
+  optional:
+    - LANGCHAIN_API_KEY
+    - LANGCHAIN_TRACING_V2
+    - LANGCHAIN_PROJECT
+
+# Resource configuration
+resources:
+  memory: "2Gi"
+  cpu: "1000m"
+  
+# Scaling configuration
+scaling:
+  min_instances: 1
+  max_instances: 5
+  target_cpu_utilization: 70
+
+# Health check configuration
+health_check:
+  path: "/health"
+  initial_delay_seconds: 30
+  period_seconds: 10
+  timeout_seconds: 5
+  failure_threshold: 3
+
+# Monitoring and logging
+monitoring:
+  enabled: true
+  log_level: "INFO"
+  metrics:
+    - "request_count"
+    - "request_duration"
+    - "error_rate"
+    - "negotiation_success_rate"
+
+# Security configuration
+security:
+  cors:
+    enabled: true
+    allow_origins: ["*"]
+    allow_methods: ["GET", "POST", "PUT", "DELETE"]
+    allow_headers: ["*"]
+
+# Deployment configuration
+deployment:
+  strategy: "rolling_update"
+  max_unavailable: 1
+  max_surge: 1
+  
+# Persistence configuration for memory system
+persistence:
+  enabled: true
+  storage_class: "standard"
+  size: "10Gi"
+  mount_path: "/app/data"
+
+# Custom configuration for Hagglz system
+hagglz_config:
+  # Bill processing configuration
+  bill_processing:
+    max_file_size: "10MB"
+    supported_formats: ["jpg", "jpeg", "png", "pdf"]
+    ocr_timeout: 30
+    
+  # Negotiation configuration
+  negotiation:
+    default_confidence_threshold: 0.6
+    max_negotiation_attempts: 3
+    timeout_seconds: 300
+    
+  # Memory system configuration
+  memory:
+    vector_store_type: "chroma"
+    embedding_model: "text-embedding-ada-002"
+    max_stored_strategies: 10000
+    retention_days: 365
+    
+  # Agent configuration
+  agents:
+    utility:
+      model: "gpt-4-turbo-preview"
+      temperature: 0.3
+      max_tokens: 2000
+      
+    medical:
+      model: "claude-3-opus-20240229"
+      temperature: 0.2
+      max_tokens: 2000
+      
+    subscription:
+      model: "gpt-4-turbo-preview"
+      temperature: 0.3
+      max_tokens: 2000
+      
+    telecom:
+      model: "gpt-4-turbo-preview"
+      temperature: 0.3
+      max_tokens: 2000
+
+# Development and testing configuration
+development:
+  debug: false
+  reload: false
+  test_mode: false
+  
+# Documentation
+documentation:
+  api_docs: "/docs"
+  redoc: "/redoc"
+  openapi_url: "/openapi.json"
+

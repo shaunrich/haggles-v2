@@ -1,0 +1,130 @@
+# Docker Compose configuration for Hagglz Negotiation Agent
+# For local development and testing
+
+version: '3.8'
+
+services:
+  # Main application service
+  hagglz-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: hagglz-negotiation-agent
+    ports:
+      - "8000:8000"
+    environment:
+      # Required environment variables
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      
+      # Optional environment variables
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY:-}
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2:-false}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-hagglz-development}
+      
+      # Application configuration
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+      - DEBUG=false
+      
+      # Database configuration
+      - CHROMA_DB_PATH=/app/data/chroma_db
+      
+    volumes:
+      # Persistent storage for vector database
+      - hagglz_data:/app/data
+      - hagglz_logs:/app/logs
+      
+      # Development volume (comment out for production)
+      - .:/app
+      
+    networks:
+      - hagglz-network
+      
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    depends_on:
+      - redis
+      
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: hagglz-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - hagglz-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx reverse proxy (optional, for production-like setup)
+  nginx:
+    image: nginx:alpine
+    container_name: hagglz-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - hagglz-network
+    restart: unless-stopped
+    depends_on:
+      - hagglz-agent
+    profiles:
+      - production
+
+# Named volumes for data persistence
+volumes:
+  hagglz_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data
+      
+  hagglz_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./logs
+      
+  redis_data:
+    driver: local
+
+# Custom network
+networks:
+  hagglz-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
