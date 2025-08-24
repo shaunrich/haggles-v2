@@ -15,49 +15,50 @@ dependencies:
   - langgraph>=0.1.0
   - langchain-openai>=0.1.0
   - langchain-anthropic>=0.1.0
-  - langchain-community>=0.1.0
+  - langchain-community>=0.4.0
   - fastapi>=0.104.0
-  - uvicorn>=0.24.0
+  - uvicorn[standard]>=0.24.0
   - pydantic>=2.0.0
   - chromadb>=0.4.0
   - python-multipart>=0.0.6
   - python-dotenv>=1.0.0
+  - openai>=1.0.0
 
 # Graph configuration
 graphs:
   # Master orchestrator graph
   - name: "master_orchestrator"
-    path: "./orchestrator.py"
+    path: "./src/hagglz/core/orchestrator.py"
     class: "MasterOrchestrator"
     description: "Main orchestrator that routes bills to specialist agents"
     
   # Utility negotiation agent
   - name: "utility_agent"
-    path: "./agents/utility_agent.py"
+    path: "./src/hagglz/agents/utility_agent.py"
     class: "UtilityNegotiationAgent"
     description: "Specialist agent for utility bill negotiations"
     
   # Medical negotiation agent
   - name: "medical_agent"
-    path: "./agents/medical_agent.py"
+    path: "./src/hagglz/agents/medical_agent.py"
     class: "MedicalNegotiationAgent"
     description: "Specialist agent for medical bill negotiations"
     
   # Subscription negotiation agent
   - name: "subscription_agent"
-    path: "./agents/subscription_agent.py"
+    path: "./src/hagglz/agents/subscription_agent.py"
     class: "SubscriptionNegotiationAgent"
     description: "Specialist agent for subscription negotiations"
     
   # Telecom negotiation agent
   - name: "telecom_agent"
-    path: "./agents/telecom_agent.py"
+    path: "./src/hagglz/agents/telecom_agent.py"
     class: "TelecomNegotiationAgent"
     description: "Specialist agent for telecom bill negotiations"
 
-# API configuration
+# API configuration - Updated path
 api:
-  path: "./api/main.py"
+  path: "./src/hagglz/api/main.py"
   app: "app"
   port: 8000
   

@@ -4,6 +4,7 @@ Hagglz Negotiation API
 FastAPI application providing REST endpoints for the Hagglz AI negotiation system.
 """
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -15,22 +16,64 @@ import uuid
 from datetime import datetime
 import os
 
-# Absolute imports for LangGraph Platform compatibility
-from hagglz.core.orchestrator import MasterOrchestrator
-from hagglz.memory.vector_store import NegotiationMemory
-from hagglz.tools.negotiation_tools import NegotiationTools
+# Relative imports for LangGraph Platform compatibility
+from ..core.orchestrator import MasterOrchestrator
+from ..memory.vector_store import NegotiationMemory
+from ..tools.negotiation_tools import NegotiationTools
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize FastAPI app
+# Global instances
+orchestrator = None
+memory_system = None
+negotiation_tools = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for FastAPI application"""
+    global orchestrator, memory_system, negotiation_tools
+    
+    try:
+        logger.info("Initialising Hagglz Negotiation System...")
+        
+        # Initialize orchestrator
+        orchestrator = MasterOrchestrator()
+        logger.info("Master orchestrator initialised")
+        
+        # Initialize memory system
+        memory_system = NegotiationMemory()
+        logger.info("Memory system initialised")
+        
+        # Initialize tools
+        negotiation_tools = NegotiationTools()
+        logger.info("Negotiation tools initialised")
+        
+        logger.info("Hagglz Negotiation System startup complete")
+        
+    except Exception as e:
+        logger.error(f"Error during startup: {str(e)}")
+        raise
+    
+    yield
+    
+    # Cleanup on shutdown
+    try:
+        logger.info("Shutting down Hagglz Negotiation System...")
+        # Add any cleanup logic here if needed
+        logger.info("Hagglz Negotiation System shutdown complete")
+    except Exception as e:
+        logger.error(f"Error during shutdown: {str(e)}")
+
+# Initialize FastAPI app with lifespan
 app = FastAPI(
     title="Hagglz Negotiation API",
     description="AI-powered bill negotiation system with specialised agents",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Configure CORS
@@ -41,11 +84,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Global instances
-orchestrator = None
-memory_system = None
-negotiation_tools = None
 
 # Pydantic models for API
 class BillUploadRequest(BaseModel):
@@ -92,33 +130,6 @@ class HealthResponse(BaseModel):
     timestamp: str
     version: str
     components: Dict[str, str]
-
-# Startup event
-@app.on_event("startup")
-async def startup_event():
-    """Initialize system components on startup"""
-    global orchestrator, memory_system, negotiation_tools
-    
-    try:
-        logger.info("Initialising Hagglz Negotiation System...")
-        
-        # Initialize orchestrator
-        orchestrator = MasterOrchestrator()
-        logger.info("Master orchestrator initialised")
-        
-        # Initialize memory system
-        memory_system = NegotiationMemory()
-        logger.info("Memory system initialised")
-        
-        # Initialize tools
-        negotiation_tools = NegotiationTools()
-        logger.info("Negotiation tools initialised")
-        
-        logger.info("Hagglz Negotiation System startup complete")
-        
-    except Exception as e:
-        logger.error(f"Error during startup: {str(e)}")
-        raise
 
 # Health check endpoint
 @app.get("/health", response_model=HealthResponse)
