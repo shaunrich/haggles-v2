@@ -1,7 +1,7 @@
 {
   "dependencies": ["."],
   "graphs": {
-    "master_orchestrator": "./src/hagglz/core/orchestrator.py:MasterOrchestrator",
+    "master_orchestrator": "./src/hagglz/core/orchestrator.py:graph",
     "utility_agent": "./src/hagglz/agents/utility_agent.py:UtilityNegotiationAgent",
     "medical_agent": "./src/hagglz/agents/medical_agent.py:MedicalNegotiationAgent",
     "subscription_agent": "./src/hagglz/agents/subscription_agent.py:SubscriptionNegotiationAgent",

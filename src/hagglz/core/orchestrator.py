@@ -5,18 +5,29 @@ This module implements the main orchestrator that coordinates all specialist age
 manages confidence-based routing, and controls the overall negotiation workflow.
 """
 
+import sys
+from pathlib import Path
+
+# Ensure the project src directory is on sys.path when imported by file path
+try:
+    src_dir = str(Path(__file__).resolve().parents[2])  # points to .../src
+    if src_dir not in sys.path:
+        sys.path.insert(0, src_dir)
+except Exception:
+    pass
+
 from langgraph.graph import StateGraph, END
 from typing import Annotated, Sequence, Dict, Any, Literal
 from langchain_core.messages import BaseMessage
 import operator
 import logging
 
-# Relative imports for LangGraph Platform compatibility
-from .router_agent import RouterAgent
-from ..agents.utility_agent import UtilityNegotiationAgent
-from ..agents.medical_agent import MedicalNegotiationAgent
-from ..agents.subscription_agent import SubscriptionNegotiationAgent
-from ..agents.telecom_agent import TelecomNegotiationAgent
+# Absolute imports for reliability under file-path import
+from hagglz.core.router_agent import RouterAgent
+from hagglz.agents.utility_agent import UtilityNegotiationAgent
+from hagglz.agents.medical_agent import MedicalNegotiationAgent
+from hagglz.agents.subscription_agent import SubscriptionNegotiationAgent
+from hagglz.agents.telecom_agent import TelecomNegotiationAgent
 
 logger = logging.getLogger(__name__)
 
@@ -365,6 +376,21 @@ def calculate_confidence(negotiation_result: Dict[str, Any]) -> float:
     
     final_confidence = min(base_confidence + adjustments, 0.95)
     return round(final_confidence, 3)
+
+# At module import time, also expose a compiled graph variable for LangGraph Platform
+try:
+    _orchestrator_instance = None
+    def _get_orchestrator():
+        global _orchestrator_instance
+        if _orchestrator_instance is None:
+            _orchestrator_instance = MasterOrchestrator()
+        return _orchestrator_instance
+
+    # Exported variable expected by langgraph.json ("...:graph")
+    graph = _get_orchestrator().create_master_orchestrator()
+except Exception as _e:
+    # Defer errors until platform attempts to use the graph
+    graph = None
 
 if __name__ == "__main__":
     # Test the master orchestrator
