@@ -12,11 +12,11 @@ import operator
 import logging
 
 # Import specialist agents
-from agents.router_agent import RouterAgent
-from agents.utility_agent import UtilityNegotiationAgent
-from agents.medical_agent import MedicalNegotiationAgent
-from agents.subscription_agent import SubscriptionNegotiationAgent
-from agents.telecom_agent import TelecomNegotiationAgent
+from ..agents.router_agent import RouterAgent
+from ..agents.utility_agent import UtilityNegotiationAgent
+from ..agents.medical_agent import MedicalNegotiationAgent
+from ..agents.subscription_agent import SubscriptionNegotiationAgent
+from ..agents.telecom_agent import TelecomNegotiationAgent
 
 logger = logging.getLogger(__name__)
 

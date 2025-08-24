@@ -1,0 +1,13 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "master_orchestrator": "./src/hagglz/core/orchestrator.py:MasterOrchestrator",
+    "utility_agent": "./src/hagglz/agents/utility_agent.py:UtilityNegotiationAgent",
+    "medical_agent": "./src/hagglz/agents/medical_agent.py:MedicalNegotiationAgent",
+    "subscription_agent": "./src/hagglz/agents/subscription_agent.py:SubscriptionNegotiationAgent",
+    "telecom_agent": "./src/hagglz/agents/telecom_agent.py:TelecomNegotiationAgent"
+  },
+  "http": {
+    "app": "./src/hagglz/api/main.py:app"
+  }
+}

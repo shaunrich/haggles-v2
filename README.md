@@ -98,22 +98,25 @@ The Hagglz AI Negotiation Agent is a comprehensive, production-ready system that
 
 ```
 haggles-v2/
-├── main.py                    # FastAPI application
-├── orchestrator.py            # Master orchestrator
-├── router_agent.py            # Bill classification and routing
-├── utility_agent.py           # Utility bill negotiations
-├── medical_agent.py           # Medical bill negotiations
-├── subscription_agent.py      # Subscription negotiations
-├── telecom_agent.py           # Telecom bill negotiations
-├── vector_store.py            # ChromaDB integration
-├── negotiation_tools.py       # Research, calculation tools
-├── deploy.py                  # Deployment automation
-├── langgraph.yaml             # LangGraph Platform config
-├── Dockerfile                 # Container configuration
-├── docker-compose.yml         # Local development setup
-├── test_*.py                  # Comprehensive test suite
-└── README.md                  # This file
+├── 📁 src/hagglz/            # Main source code package
+│   ├── 📁 api/               # FastAPI application
+│   ├── 📁 core/              # Core orchestration & routing
+│   ├── 📁 agents/            # Specialised negotiation agents
+│   ├── 📁 memory/            # Vector-based memory system
+│   └── 📁 tools/             # Negotiation support tools
+├── 📁 tests/                 # Comprehensive test suite
+│   ├── 📁 unit/              # Unit tests
+│   ├── 📁 integration/       # Integration tests
+│   └── 📁 system/            # System tests
+├── 📁 docs/                  # Documentation
+│   ├── 📁 guides/            # User & developer guides
+│   └── 📁 deployment/        # Deployment documentation
+├── 📁 config/                # Configuration files
+├── 📁 scripts/               # Utility scripts
+└── 📄 README.md              # This file
 ```
+
+> **📋 See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for detailed organization**
 
 ## 🚀 Quick Start
 
@@ -144,7 +147,7 @@ haggles-v2/
 
 4. **Run the API server**
    ```bash
-   python run_api.py
+   python src/hagglz/api/run_api.py
    ```
 
 5. **Access the API**
@@ -156,12 +159,12 @@ haggles-v2/
 
 1. **Build and run with Docker Compose**
    ```bash
-   docker-compose up --build
+   docker-compose -f config/docker-compose.yml up --build
    ```
 
 2. **Or build Docker image manually**
    ```bash
-   docker build -t hagglz-negotiation-agent .
+   docker build -t hagglz-negotiation-agent -f config/Dockerfile .
    docker run -p 8000:8000 hagglz-negotiation-agent
    ```
 
@@ -189,19 +192,19 @@ haggles-v2/
 
 ### Run All Tests
 ```bash
-python -m pytest test_*.py -v
+python -m pytest tests/ -v
 ```
 
 ### Run Specific Test Categories
 ```bash
-# API tests
-python test_api.py
+# Unit tests
+python -m pytest tests/unit/ -v
 
 # Integration tests
-python test_integration.py
+python -m pytest tests/integration/ -v
 
 # System tests
-python test_system.py
+python -m pytest tests/system/ -v
 ```
 
 ### Test Coverage

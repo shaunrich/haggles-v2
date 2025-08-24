@@ -19,9 +19,9 @@ import sys
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from orchestrator import MasterOrchestrator
-from memory.vector_store import NegotiationMemory
-from tools.negotiation_tools import NegotiationTools
+from ..core.orchestrator import MasterOrchestrator
+from ..memory.vector_store import NegotiationMemory
+from ..tools.negotiation_tools import NegotiationTools
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
