@@ -31,6 +31,15 @@ LANGCHAIN_PROJECT=hagglz-production
 
 ## 🔧 **Configuration Files**
 
+### **⚠️ Important: Package Configuration Fix**
+The repository name `haggles-v2` contains a hyphen, which causes deployment issues with LangGraph Platform. This has been resolved by adding proper Python package configuration files:
+
+- **`pyproject.toml`**: Modern Python packaging configuration
+- **`setup.py`**: Traditional Python packaging configuration
+- **`langgraph.json`**: Updated with Wolfi Linux distribution for security
+
+These files make the project a proper Python package, allowing LangGraph Platform to deploy successfully.
+
 ### **1. langgraph.json (Root Directory)**
 ```json
 {
@@ -44,9 +53,12 @@ LANGCHAIN_PROJECT=hagglz-production
   },
   "http": {
     "app": "./src/hagglz/api/main.py:app"
-  }
+  },
+  "image_distro": "wolfi"
 }
 ```
+
+**Note**: The `image_distro: "wolfi"` setting enables enhanced security with Wolfi Linux distribution.
 
 ### **2. requirements.txt (Root Directory)**
 ```txt
@@ -189,7 +201,19 @@ curl -X POST https://your-deployment-url/negotiate \
 
 ### **Common Issues**
 
-#### **1. Import Path Errors**
+#### **1. Package Name Hyphen Error**
+```bash
+# ❌ Error: Package name 'haggles-v2' contains a hyphen
+ValueError: Package name 'haggles-v2' contains a hyphen. 
+Rename the directory to use it as flat-layout package.
+
+# ✅ Solution: Added proper Python package configuration
+# - pyproject.toml (modern packaging)
+# - setup.py (traditional packaging)
+# - langgraph.json with image_distro: "wolfi"
+```
+
+#### **2. Import Path Errors**
 ```python
 # ❌ Old import style
 from agents.utility_agent import UtilityNegotiationAgent

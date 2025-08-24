@@ -9,5 +9,6 @@
   },
   "http": {
     "app": "./src/hagglz/api/main.py:app"
-  }
+  },
+  "image_distro": "wolfi"
 }
