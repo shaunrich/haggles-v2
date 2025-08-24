@@ -15,11 +15,22 @@ import logging
 import uuid
 from datetime import datetime
 import os
+import sys
+from pathlib import Path
 
-# Relative imports for LangGraph Platform compatibility
-from ..core.orchestrator import MasterOrchestrator
-from ..memory.vector_store import NegotiationMemory
-from ..tools.negotiation_tools import NegotiationTools
+# Ensure the project src directory is on sys.path when imported by file path
+try:
+    src_dir = str(Path(__file__).resolve().parents[2])  # points to .../src
+    if src_dir not in sys.path:
+        sys.path.insert(0, src_dir)
+except Exception:
+    # Non-fatal; imports may still work in some environments
+    pass
+
+# Absolute imports so module can be imported from file path
+from hagglz.core.orchestrator import MasterOrchestrator
+from hagglz.memory.vector_store import NegotiationMemory
+from hagglz.tools.negotiation_tools import NegotiationTools
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
