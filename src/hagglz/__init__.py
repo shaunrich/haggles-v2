@@ -8,8 +8,8 @@ __version__ = "2.0.0"
 __author__ = "Hagglz Team"
 __description__ = "AI-powered bill negotiation system with specialised agents"
 
-from .core.orchestrator import MasterOrchestrator
-from .core.router_agent import RouterAgent
+from hagglz.core.orchestrator import MasterOrchestrator
+from hagglz.core.router_agent import RouterAgent
 
 __all__ = [
     "MasterOrchestrator",

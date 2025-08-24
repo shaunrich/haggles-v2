@@ -14,14 +14,11 @@ import logging
 import uuid
 from datetime import datetime
 import os
-import sys
 
-# Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from ..core.orchestrator import MasterOrchestrator
-from ..memory.vector_store import NegotiationMemory
-from ..tools.negotiation_tools import NegotiationTools
+# Absolute imports for LangGraph Platform compatibility
+from hagglz.core.orchestrator import MasterOrchestrator
+from hagglz.memory.vector_store import NegotiationMemory
+from hagglz.tools.negotiation_tools import NegotiationTools
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

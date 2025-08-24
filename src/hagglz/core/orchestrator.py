@@ -11,12 +11,12 @@ from langchain_core.messages import BaseMessage
 import operator
 import logging
 
-# Import specialist agents
-from ..agents.router_agent import RouterAgent
-from ..agents.utility_agent import UtilityNegotiationAgent
-from ..agents.medical_agent import MedicalNegotiationAgent
-from ..agents.subscription_agent import SubscriptionNegotiationAgent
-from ..agents.telecom_agent import TelecomNegotiationAgent
+# Absolute imports for LangGraph Platform compatibility
+from hagglz.core.router_agent import RouterAgent
+from hagglz.agents.utility_agent import UtilityNegotiationAgent
+from hagglz.agents.medical_agent import MedicalNegotiationAgent
+from hagglz.agents.subscription_agent import SubscriptionNegotiationAgent
+from hagglz.agents.telecom_agent import TelecomNegotiationAgent
 
 logger = logging.getLogger(__name__)
 
