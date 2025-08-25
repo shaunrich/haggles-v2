@@ -7,19 +7,19 @@ the appropriate specialist agent for negotiation.
 
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
-from typing import TypedDict, Literal
+from typing import TypedDict, Literal, List, Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)
 
-class BillState(TypedDict):
+class BillState(TypedDict, total=False):
     """State structure for bill processing"""
     bill_type: str
     ocr_text: str
     company: str
     amount: float
     negotiation_strategy: str
-    conversation_history: list
+    conversation_history: List[Dict[str, Any]]
     confidence_score: float
     errors: str
     script: str

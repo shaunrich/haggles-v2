@@ -7,10 +7,21 @@ including electric, gas, water, and heating bills.
 
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
-from typing import Dict, Any
+from typing import Dict, Any, TypedDict
 import logging
 
 logger = logging.getLogger(__name__)
+
+class UtilityState(TypedDict, total=False):
+    bill_type: str
+    ocr_text: str
+    company: str
+    amount: float
+    usage_analysis: str
+    competitor_research: str
+    negotiation_strategy: str
+    target_savings: Dict[str, Any]
+    confidence_score: float
 
 class UtilityNegotiationAgent:
     """Specialist agent for utility bill negotiations"""
@@ -33,9 +44,9 @@ class UtilityNegotiationAgent:
     def build_graph(self):
         """Build the utility negotiation workflow graph"""
         
-        workflow = StateGraph(dict)
+        workflow = StateGraph(UtilityState)
         
-        def analyse_usage_history(state: Dict[str, Any]) -> Dict[str, Any]:
+        def analyse_usage_history(state: UtilityState) -> UtilityState:
             """Analyse usage patterns and historical data"""
             logger.info("Analysing utility usage history and patterns")
             
@@ -89,7 +100,7 @@ class UtilityNegotiationAgent:
                 
             return state
         
-        def research_competitors(state: Dict[str, Any]) -> Dict[str, Any]:
+        def research_competitors(state: UtilityState) -> UtilityState:
             """Research competitor rates and offers"""
             logger.info("Researching competitor rates and market offers")
             
@@ -135,7 +146,7 @@ class UtilityNegotiationAgent:
                 
             return state
         
-        def generate_negotiation_plan(state: Dict[str, Any]) -> Dict[str, Any]:
+        def generate_negotiation_plan(state: UtilityState) -> UtilityState:
             """Generate negotiation strategy and script"""
             logger.info("Generating negotiation plan and script")
             

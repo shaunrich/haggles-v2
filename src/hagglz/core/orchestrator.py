@@ -17,7 +17,7 @@ except Exception:
     pass
 
 from langgraph.graph import StateGraph, END
-from typing import Annotated, Sequence, Dict, Any, Literal
+from typing import Dict, Any, Literal, List, TypedDict, NotRequired
 from langchain_core.messages import BaseMessage
 import operator
 import logging
@@ -31,20 +31,17 @@ from hagglz.agents.telecom_agent import TelecomNegotiationAgent
 
 logger = logging.getLogger(__name__)
 
-class NegotiationState(Dict[str, Any]):
-    """Enhanced state structure for the negotiation workflow"""
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # Ensure all required fields exist with defaults
-        self.setdefault('messages', [])
-        self.setdefault('bill_data', {})
-        self.setdefault('agent_decision', '')
-        self.setdefault('negotiation_result', {})
-        self.setdefault('confidence_score', 0.0)
-        self.setdefault('execution_mode', '')
-        self.setdefault('error_messages', [])
-        self.setdefault('processing_status', 'pending')
+class NegotiationState(TypedDict, total=False):
+    """State structure for the negotiation workflow"""
+    messages: List[BaseMessage]
+    bill_data: Dict[str, Any]
+    agent_decision: str
+    negotiation_result: Dict[str, Any]
+    confidence_score: float
+    execution_mode: str
+    error_messages: List[str]
+    processing_status: str
+    user_id: str
 
 class MasterOrchestrator:
     """Master orchestrator for the Hagglz negotiation system"""
