@@ -7,10 +7,20 @@ including phone, internet, cable, and mobile service bills.
 
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
-from typing import Dict, Any
+from typing import Dict, Any, TypedDict
 import logging
 
 logger = logging.getLogger(__name__)
+
+class TelecomState(TypedDict, total=False):
+    bill_type: str
+    ocr_text: str
+    company: str
+    amount: float
+    service_analysis: str
+    telecom_type: str
+    plan_details: Dict[str, Any]
+    negotiation_guidance: str
 
 class TelecomNegotiationAgent:
     """Specialist agent for telecom bill negotiations"""
@@ -67,9 +77,9 @@ class TelecomNegotiationAgent:
     def build_graph(self):
         """Build the telecom negotiation workflow graph"""
         
-        workflow = StateGraph(dict)
+        workflow = StateGraph(TelecomState)
         
-        def identify_telecom_services(state: Dict[str, Any]) -> Dict[str, Any]:
+        def identify_telecom_services(state: TelecomState) -> TelecomState:
             """Identify telecom services and plan details"""
             logger.info("Identifying telecom services and plan characteristics")
             

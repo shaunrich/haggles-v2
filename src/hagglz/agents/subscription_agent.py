@@ -7,10 +7,21 @@ including streaming services, software subscriptions, and memberships.
 
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
-from typing import Dict, Any
+from typing import Dict, Any, TypedDict
 import logging
 
 logger = logging.getLogger(__name__)
+
+class SubscriptionState(TypedDict, total=False):
+    bill_type: str
+    ocr_text: str
+    company: str
+    amount: float
+    subscription_analysis: str
+    subscription_type: str
+    type_info: Dict[str, Any]
+    usage_recommendations: str
+    negotiation_plan: str
 
 class SubscriptionNegotiationAgent:
     """Specialist agent for subscription bill negotiations"""
@@ -62,9 +73,9 @@ class SubscriptionNegotiationAgent:
     def build_graph(self):
         """Build the subscription negotiation workflow graph"""
         
-        workflow = StateGraph(dict)
+        workflow = StateGraph(SubscriptionState)
         
-        def identify_subscription_type(state: Dict[str, Any]) -> Dict[str, Any]:
+        def identify_subscription_type(state: SubscriptionState) -> SubscriptionState:
             """Identify the specific type of subscription"""
             logger.info("Identifying subscription type and characteristics")
             
@@ -124,7 +135,7 @@ class SubscriptionNegotiationAgent:
                 
             return state
         
-        def analyse_usage_patterns(state: Dict[str, Any]) -> Dict[str, Any]:
+        def analyse_usage_patterns(state: SubscriptionState) -> SubscriptionState:
             """Analyse subscription usage and value"""
             logger.info("Analysing subscription usage patterns and value")
             
@@ -168,7 +179,7 @@ class SubscriptionNegotiationAgent:
                 
             return state
         
-        def research_alternatives(state: Dict[str, Any]) -> Dict[str, Any]:
+        def research_alternatives(state: SubscriptionState) -> SubscriptionState:
             """Research alternative plans and competitor options"""
             logger.info("Researching subscription alternatives and competitors")
             
@@ -214,7 +225,7 @@ class SubscriptionNegotiationAgent:
                 
             return state
         
-        def generate_subscription_strategy(state: Dict[str, Any]) -> Dict[str, Any]:
+        def generate_subscription_strategy(state: SubscriptionState) -> SubscriptionState:
             """Generate subscription negotiation strategy"""
             logger.info("Generating subscription negotiation strategy")
             
@@ -283,7 +294,7 @@ class SubscriptionNegotiationAgent:
                 
             return state
         
-        def create_subscription_script(state: Dict[str, Any]) -> Dict[str, Any]:
+        def create_subscription_script(state: SubscriptionState) -> SubscriptionState:
             """Generate subscription negotiation script"""
             logger.info("Creating subscription negotiation script")
             
@@ -353,7 +364,7 @@ class SubscriptionNegotiationAgent:
                 
             return state
         
-        def calculate_subscription_savings(state: Dict[str, Any]) -> Dict[str, Any]:
+        def calculate_subscription_savings(state: SubscriptionState) -> SubscriptionState:
             """Calculate potential savings for subscription"""
             logger.info("Calculating subscription savings potential")
             
@@ -412,7 +423,7 @@ class SubscriptionNegotiationAgent:
         
         return workflow.compile()
     
-    def process_subscription_bill(self, bill_state: Dict[str, Any]) -> Dict[str, Any]:
+    def process_subscription_bill(self, bill_state: SubscriptionState) -> SubscriptionState:
         """Process a subscription bill through the negotiation workflow"""
         if not hasattr(self, '_compiled_workflow'):
             self._compiled_workflow = self.build_graph()

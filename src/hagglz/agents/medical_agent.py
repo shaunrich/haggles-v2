@@ -7,11 +7,20 @@ including healthcare, dental, and hospital bills using Claude AI.
 
 from langgraph.graph import StateGraph, END
 from langchain_anthropic import ChatAnthropic
-from typing import Dict, Any
+from typing import Dict, Any, TypedDict
 import logging
 import re
 
 logger = logging.getLogger(__name__)
+
+class MedicalState(TypedDict, total=False):
+    bill_type: str
+    ocr_text: str
+    company: str
+    amount: float
+    error_analysis: str
+    savings_opportunities: str
+    negotiation_outline: str
 
 class MedicalNegotiationAgent:
     """Specialist agent for medical bill negotiations"""
@@ -47,9 +56,9 @@ class MedicalNegotiationAgent:
     def build_graph(self):
         """Build the medical negotiation workflow graph"""
         
-        workflow = StateGraph(dict)
+        workflow = StateGraph(MedicalState)
         
-        def check_billing_errors(state: Dict[str, Any]) -> Dict[str, Any]:
+        def check_billing_errors(state: MedicalState) -> MedicalState:
             """Check for common medical billing errors"""
             logger.info("Checking medical bill for errors and discrepancies")
             
