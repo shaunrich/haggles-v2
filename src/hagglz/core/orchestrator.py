@@ -17,10 +17,11 @@ except Exception:
     pass
 
 from langgraph.graph import StateGraph, END
-from typing import Dict, Any, Literal, List, TypedDict, NotRequired
+from typing import Dict, Any, Literal, List, TypedDict, NotRequired, Callable, Optional
 from langchain_core.messages import BaseMessage
 import operator
 import logging
+import base64
 
 # Absolute imports for reliability under file-path import
 from hagglz.core.router_agent import RouterAgent
@@ -46,8 +47,9 @@ class NegotiationState(TypedDict, total=False):
 class MasterOrchestrator:
     """Master orchestrator for the Hagglz negotiation system"""
     
-    def __init__(self):
+    def __init__(self, ocr_extract_fn: Optional[Callable[[bytes, str], str]] = None):
         self.workflow = None
+        self._ocr_extract_fn = ocr_extract_fn
         
         # Confidence thresholds as per specification
         self.CONFIDENCE_THRESHOLD_AUTO = 0.8
@@ -86,7 +88,23 @@ class MasterOrchestrator:
             
             try:
                 # Extract OCR text from bill data
-                ocr_text = state.get('bill_data', {}).get('text', '')
+                bill = state.get('bill_data', {})
+                ocr_text = bill.get('text', '') or ''
+
+                # If no text but we have base64 content and an OCR fn, extract now
+                if not ocr_text and self._ocr_extract_fn:
+                    b64 = bill.get('image_base64') or bill.get('file_base64')
+                    if isinstance(b64, str) and b64:
+                        try:
+                            raw = base64.b64decode(b64)
+                            suffix = ".pdf" if raw[:4] == b"%PDF" else ".png"
+                            ocr_text = self._ocr_extract_fn(raw, suffix)
+                            bill['text'] = ocr_text
+                            state['bill_data'] = bill
+                            logger.info("OCR text populated via integration during routing")
+                        except Exception as oe:
+                            logger.warning(f"Inline OCR extraction failed: {oe}")
+                
                 if not ocr_text:
                     raise ValueError("No OCR text provided in bill data")
                 

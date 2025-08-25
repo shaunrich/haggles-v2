@@ -52,7 +52,12 @@ async def lifespan(app: FastAPI):
         logger.info("Initialising Hagglz Negotiation System...")
         
         # Initialize orchestrator
-        orchestrator = MasterOrchestrator()
+        def _ocr_fn(raw: bytes, suffix: str) -> str:
+            if chunkr_client and chunkr_client.enabled:
+                return chunkr_client.extract_text_from_bytes(raw, suffix=suffix)
+            raise RuntimeError("OCR not available")
+
+        orchestrator = MasterOrchestrator(ocr_extract_fn=_ocr_fn)
         logger.info("Master orchestrator initialised")
         
         # Initialize memory system
