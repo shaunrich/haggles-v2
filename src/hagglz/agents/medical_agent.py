@@ -61,49 +61,22 @@ class MedicalNegotiationAgent:
             - Amount: ${state.get('amount', 0)}
             - Bill Text: {state['ocr_text']}
             
-            Check for these common medical billing errors:
-            {chr(10).join([f"- {error}" for error in self.common_errors])}
+            Please identify:
+            1. Potential coding errors (CPT codes)
+            2. Duplicate or unnecessary charges
+            3. Insurance processing issues
+            4. Mismatched patient or service information
             
-            Analysis Instructions:
-            1. Look for duplicate line items or charges
-            2. Identify any unusual or excessive charges
-            3. Check for services that seem unrelated to the visit
-            4. Look for coding inconsistencies
-            5. Identify any insurance processing issues
-            6. Check for balance billing problems
-            
-            Provide a detailed analysis including:
-            - Specific errors found (if any)
-            - Questionable charges that need clarification
-            - Insurance-related issues
-            - Recommendations for dispute or clarification
-            - Overall assessment of bill accuracy
-            
-            Be thorough but conservative in identifying potential errors.
+            Provide a summary and suggested next steps.
             """
             
             try:
                 response = self.llm.invoke(prompt)
                 state['error_analysis'] = response.content
-                
-                # Determine if significant errors were found
-                error_text = response.content.lower()
-                error_indicators = [
-                    'duplicate' in error_text,
-                    'error' in error_text,
-                    'incorrect' in error_text,
-                    'questionable' in error_text,
-                    'dispute' in error_text
-                ]
-                
-                state['has_errors'] = sum(error_indicators) >= 2
-                logger.info(f"Error analysis completed. Errors found: {state['has_errors']}")
-                
             except Exception as e:
-                logger.error(f"Error in billing analysis: {str(e)}")
-                state['error_analysis'] = "Error analysis unavailable"
-                state['has_errors'] = False
-                
+                logger.error(f"Error checking billing errors: {str(e)}")
+                state['error_analysis'] = "Analysis unavailable"
+            
             return state
         
         def assess_financial_hardship(state: Dict[str, Any]) -> Dict[str, Any]:

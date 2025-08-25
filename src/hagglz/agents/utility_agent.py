@@ -7,7 +7,6 @@ including electric, gas, water, and heating bills.
 
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
-from langchain.memory import ConversationBufferMemory
 from typing import Dict, Any
 import logging
 
@@ -16,9 +15,8 @@ logger = logging.getLogger(__name__)
 class UtilityNegotiationAgent:
     """Specialist agent for utility bill negotiations"""
     
-    def __init__(self, model: str = "gpt-4-turbo-preview", temperature: float = 0.3):
+    def __init__(self, model: str = "gpt-4o-mini", temperature: float = 0.3):
         self.llm = ChatOpenAI(model=model, temperature=temperature)
-        self.memory = ConversationBufferMemory()
         
         # Proven utility negotiation scripts
         self.negotiation_scripts = [
@@ -122,174 +120,63 @@ class UtilityNegotiationAgent:
             try:
                 response = self.llm.invoke(prompt)
                 state['competitor_research'] = response.content
-                logger.info("Competitor research completed")
+                
+                # Update confidence based on presence of strong points
+                text = response.content.lower()
+                boost = 0.0
+                for kw in ['match', 'beat', 'discount', 'offer', 'promotion']:
+                    if kw in text:
+                        boost += 0.03
+                state['confidence_score'] = min(state.get('confidence_score', 0.25) + boost, 0.95)
                 
             except Exception as e:
-                logger.error(f"Error in competitor research: {str(e)}")
-                state['competitor_research'] = "Competitor research unavailable"
+                logger.error(f"Error researching competitors: {str(e)}")
+                state['competitor_research'] = "Research unavailable"
                 
             return state
         
-        def generate_negotiation_strategy(state: Dict[str, Any]) -> Dict[str, Any]:
-            """Generate comprehensive negotiation strategy"""
-            logger.info("Generating utility negotiation strategy")
+        def generate_negotiation_plan(state: Dict[str, Any]) -> Dict[str, Any]:
+            """Generate negotiation strategy and script"""
+            logger.info("Generating negotiation plan and script")
             
             prompt = f"""
-            Create a comprehensive utility negotiation strategy based on:
-            
-            Bill Information:
+            Create a negotiation strategy and script based on:
+            - Usage analysis: {state.get('usage_analysis', '')}
+            - Competitor research: {state.get('competitor_research', '')}
             - Company: {state.get('company', 'Unknown')}
             - Amount: ${state.get('amount', 0)}
-            - Type: {state.get('bill_type', 'UTILITY')}
             
-            Analysis: {state.get('usage_analysis', 'Not available')}
-            Competitor Research: {state.get('competitor_research', 'Not available')}
-            
-            Create a strategy including:
-            1. Primary negotiation angle (loyalty, competition, hardship, etc.)
-            2. Specific talking points and arguments
-            3. Target savings percentage (realistic range)
-            4. Fallback positions if initial approach fails
-            5. Timing recommendations for the call
-            6. Key phrases and questions to use
-            
-            Proven Utility Negotiation Approaches:
-            - Loyalty-based: Emphasise long-term customer relationship
-            - Competition-based: Reference specific competitor offers
-            - Hardship-based: Request assistance programmes
-            - Rate analysis: Question rate increases and seek explanations
-            - Bundle opportunities: Explore service combinations
-            
-            Provide a detailed, actionable negotiation strategy.
+            Provide:
+            1. Negotiation strategy (bulleted)
+            2. Script the user can read
+            3. Expected savings range and confidence
             """
             
             try:
                 response = self.llm.invoke(prompt)
                 state['negotiation_strategy'] = response.content
-                logger.info("Negotiation strategy generated")
-                
-            except Exception as e:
-                logger.error(f"Error generating strategy: {str(e)}")
-                state['negotiation_strategy'] = "Strategy generation failed"
-                
-            return state
-        
-        def create_negotiation_script(state: Dict[str, Any]) -> Dict[str, Any]:
-            """Generate specific negotiation script"""
-            logger.info("Creating utility negotiation script")
-            
-            # Select appropriate script templates based on strategy
-            strategy_text = state.get('negotiation_strategy', '').lower()
-            
-            selected_scripts = []
-            if 'loyal' in strategy_text:
-                selected_scripts.append(self.negotiation_scripts[0])
-            if 'competitor' in strategy_text:
-                selected_scripts.extend(self.negotiation_scripts[1:3])
-            if 'hardship' in strategy_text:
-                selected_scripts.append(self.negotiation_scripts[4])
-            if 'discount' in strategy_text:
-                selected_scripts.extend(self.negotiation_scripts[3:4])
-            
-            # Default scripts if none selected
-            if not selected_scripts:
-                selected_scripts = self.negotiation_scripts[:3]
-            
-            prompt = f"""
-            Create a complete negotiation script for this utility bill:
-            
-            Company: {state.get('company', 'Unknown')}
-            Amount: ${state.get('amount', 0)}
-            Strategy: {state.get('negotiation_strategy', 'Not available')}
-            
-            Use these proven script templates:
-            {chr(10).join(selected_scripts)}
-            
-            Create a complete dialogue including:
-            1. Opening statement and introduction
-            2. Main negotiation points (2-3 key arguments)
-            3. Specific requests (discount percentage, payment plans, etc.)
-            4. Responses to common objections
-            5. Closing statements and next steps
-            
-            Make the script conversational, polite but firm, and specific to this situation.
-            Include placeholder values that can be customised (e.g., [years as customer], [competitor name]).
-            """
-            
-            try:
-                response = self.llm.invoke(prompt)
-                state['script'] = response.content
-                logger.info("Negotiation script created")
-                
-                # Adjust confidence based on script quality
-                script_quality_indicators = [
-                    'opening' in response.content.lower(),
-                    'discount' in response.content.lower(),
-                    'competitor' in response.content.lower(),
-                    'loyal' in response.content.lower()
-                ]
-                script_bonus = sum(script_quality_indicators) * 0.05
-                state['confidence_score'] = min(state.get('confidence_score', 0.5) + script_bonus, 0.95)
-                
-            except Exception as e:
-                logger.error(f"Error creating script: {str(e)}")
-                state['script'] = "Script generation failed"
-                
-            return state
-        
-        def calculate_savings_potential(state: Dict[str, Any]) -> Dict[str, Any]:
-            """Calculate potential savings and ROI"""
-            logger.info("Calculating savings potential")
-            
-            current_amount = state.get('amount', 0)
-            
-            # Typical utility savings ranges
-            savings_scenarios = {
-                'conservative': 0.05,  # 5%
-                'moderate': 0.15,      # 15%
-                'aggressive': 0.25     # 25%
-            }
-            
-            savings_analysis = {}
-            for scenario, percentage in savings_scenarios.items():
-                monthly_savings = current_amount * percentage
-                annual_savings = monthly_savings * 12
-                savings_analysis[scenario] = {
-                    'monthly_savings': round(monthly_savings, 2),
-                    'annual_savings': round(annual_savings, 2),
-                    'percentage': percentage * 100
+                # Rough savings estimate for demo purposes
+                state['target_savings'] = {
+                    'percentage': round(100 * min(0.35, state.get('confidence_score', 0.3)), 1)
                 }
-            
-            state['savings_potential'] = savings_analysis
-            
-            # Set target savings based on confidence
-            confidence = state.get('confidence_score', 0.5)
-            if confidence > 0.8:
-                state['target_savings'] = savings_analysis['aggressive']
-            elif confidence > 0.6:
-                state['target_savings'] = savings_analysis['moderate']
-            else:
-                state['target_savings'] = savings_analysis['conservative']
-            
-            logger.info(f"Savings potential calculated: {state['target_savings']}")
+                
+            except Exception as e:
+                logger.error(f"Error generating negotiation plan: {str(e)}")
+                state['negotiation_strategy'] = "Unable to generate strategy"
+                state['target_savings'] = {'percentage': 0.0}
+                
             return state
         
-        # Add nodes to workflow
-        workflow.add_node("analyse_usage", analyse_usage_history)
+        # Build workflow
+        workflow.add_node("analyse_usage_history", analyse_usage_history)
         workflow.add_node("research_competitors", research_competitors)
-        workflow.add_node("generate_strategy", generate_negotiation_strategy)
-        workflow.add_node("create_script", create_negotiation_script)
-        workflow.add_node("calculate_savings", calculate_savings_potential)
+        workflow.add_node("generate_plan", generate_negotiation_plan)
         
-        # Define edges
-        workflow.add_edge("analyse_usage", "research_competitors")
-        workflow.add_edge("research_competitors", "generate_strategy")
-        workflow.add_edge("generate_strategy", "create_script")
-        workflow.add_edge("create_script", "calculate_savings")
-        workflow.add_edge("calculate_savings", END)
+        workflow.add_edge("analyse_usage_history", "research_competitors")
+        workflow.add_edge("research_competitors", "generate_plan")
+        workflow.add_edge("generate_plan", END)
         
-        workflow.set_entry_point("analyse_usage")
-        
+        workflow.set_entry_point("analyse_usage_history")
         return workflow.compile()
     
     def process_utility_bill(self, bill_state: Dict[str, Any]) -> Dict[str, Any]:

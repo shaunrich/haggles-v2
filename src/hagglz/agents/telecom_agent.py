@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class TelecomNegotiationAgent:
     """Specialist agent for telecom bill negotiations"""
     
-    def __init__(self, model: str = "gpt-4-turbo-preview", temperature: float = 0.3):
+    def __init__(self, model: str = "gpt-4o-mini", temperature: float = 0.3):
         self.llm = ChatOpenAI(model=model, temperature=temperature)
         
         # Proven telecom negotiation scripts
