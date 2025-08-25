@@ -285,7 +285,7 @@ class MasterOrchestrator:
         # Add nodes to workflow
         workflow.add_node("route", route_negotiation)
         workflow.add_node("execute", execute_specialist_agent)
-        workflow.add_node("evaluate", lambda state: evaluate_confidence(state))
+        workflow.add_node("evaluate", lambda state: state)
         workflow.add_node("auto_execute", auto_execute_negotiation)
         workflow.add_node("supervised", supervised_execution)
         workflow.add_node("human_handoff", human_handoff)
