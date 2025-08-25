@@ -106,7 +106,7 @@ class MasterOrchestrator:
                 
             except Exception as e:
                 logger.error(f"Error in bill routing: {str(e)}")
-                state['error_messages'].append(f"Routing error: {str(e)}")
+                state.setdefault('error_messages', []).append(f"Routing error: {str(e)}")
                 state['agent_decision'] = 'UTILITY'  # Default fallback
                 state['processing_status'] = 'routing_error'
             
@@ -152,7 +152,7 @@ class MasterOrchestrator:
                 
             except Exception as e:
                 logger.error(f"Error executing specialist agent: {str(e)}")
-                state['error_messages'].append(f"Specialist execution error: {str(e)}")
+                state.setdefault('error_messages', []).append(f"Specialist execution error: {str(e)}")
                 state['confidence_score'] = 0.0
                 state['processing_status'] = 'specialist_error'
                 state['negotiation_result'] = {
@@ -326,7 +326,8 @@ class MasterOrchestrator:
         initial_state = NegotiationState(
             bill_data=bill_data,
             messages=[],
-            user_id=user_id or 'anonymous'
+            user_id=user_id or 'anonymous',
+            error_messages=[]
         )
         
         try:
