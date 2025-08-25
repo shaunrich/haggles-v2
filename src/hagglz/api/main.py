@@ -31,6 +31,7 @@ except Exception:
 from hagglz.core.orchestrator import MasterOrchestrator
 from hagglz.memory.vector_store import NegotiationMemory
 from hagglz.tools.negotiation_tools import NegotiationTools
+from hagglz.integrations.chunkr_client import ChunkrClient
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -40,11 +41,12 @@ logger = logging.getLogger(__name__)
 orchestrator = None
 memory_system = None
 negotiation_tools = None
+chunkr_client: Optional[ChunkrClient] = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for FastAPI application"""
-    global orchestrator, memory_system, negotiation_tools
+    global orchestrator, memory_system, negotiation_tools, chunkr_client
     
     try:
         logger.info("Initialising Hagglz Negotiation System...")
@@ -61,6 +63,13 @@ async def lifespan(app: FastAPI):
         negotiation_tools = NegotiationTools()
         logger.info("Negotiation tools initialised")
         
+        # Initialize Chunkr client if API key present
+        chunkr_client = ChunkrClient()
+        if chunkr_client.enabled:
+            logger.info("Chunkr client initialised")
+        else:
+            logger.info("Chunkr client disabled (no CHUNKR_API_KEY)")
+        
         logger.info("Hagglz Negotiation System startup complete")
         
     except Exception as e:
@@ -72,7 +81,8 @@ async def lifespan(app: FastAPI):
     # Cleanup on shutdown
     try:
         logger.info("Shutting down Hagglz Negotiation System...")
-        # Add any cleanup logic here if needed
+        if chunkr_client and chunkr_client.enabled:
+            chunkr_client.close()
         logger.info("Hagglz Negotiation System shutdown complete")
     except Exception as e:
         logger.error(f"Error during shutdown: {str(e)}")
@@ -99,7 +109,7 @@ app.add_middleware(
 # Pydantic models for API
 class BillUploadRequest(BaseModel):
     """Request model for bill upload"""
-    bill_image: str = Field(..., description="Base64 encoded bill image")
+    bill_image: str = Field(..., description="Base64 encoded bill image or PDF bytes")
     user_id: str = Field(..., description="User identifier")
     target_savings: Optional[float] = Field(None, description="Target savings percentage")
     additional_context: Optional[Dict[str, Any]] = Field(None, description="Additional context")
@@ -153,7 +163,8 @@ async def health_check():
         components={
             "orchestrator": "active" if orchestrator else "inactive",
             "memory_system": "active" if memory_system else "inactive",
-            "negotiation_tools": "active" if negotiation_tools else "inactive"
+            "negotiation_tools": "active" if negotiation_tools else "inactive",
+            "chunkr": "active" if (chunkr_client and chunkr_client.enabled) else "inactive",
         }
     )
 
@@ -228,15 +239,24 @@ async def upload_bill(request: BillUploadRequest):
     try:
         logger.info(f"Processing bill upload for user: {request.user_id}")
         
-        # Decode base64 image
+        # Decode base64 image/PDF
         try:
-            image_data = base64.b64decode(request.bill_image)
-        except Exception as e:
+            content = base64.b64decode(request.bill_image)
+        except Exception:
             raise HTTPException(status_code=400, detail="Invalid base64 image data")
         
-        # In a real implementation, you would use OCR here
-        # For now, we'll return a placeholder response
-        ocr_text = "SAMPLE BILL\nCOMPANY NAME\nAmount Due: $150.00"
+        # Determine suffix by simple magic bytes
+        suffix = ".pdf" if content[:4] == b"%PDF" else ".png"
+        
+        if not chunkr_client or not chunkr_client.enabled:
+            logger.warning("Chunkr disabled; returning placeholder OCR text")
+            ocr_text = "OCR unavailable. Enable CHUNKR_API_KEY to process."
+        else:
+            try:
+                ocr_text = chunkr_client.extract_text_from_bytes(content, suffix=suffix)
+            except Exception as e:
+                logger.error(f"Chunkr OCR error: {e}")
+                raise HTTPException(status_code=502, detail="Upstream OCR service error")
         
         return {
             "upload_id": str(uuid.uuid4()),
